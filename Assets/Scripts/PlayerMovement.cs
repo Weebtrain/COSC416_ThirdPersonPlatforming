@@ -6,6 +6,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private InputManager inputManager;
     [SerializeField] private float speed = 1;
+    [SerializeField] private float jumpStrength = 1;
     [SerializeField] private float maxSpeed = 2;
     [SerializeField] private Transform camera;
 
@@ -34,7 +35,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump ()
     {
-
+        rb.AddForce(Vector3.up * jumpStrength);
     }
 
     private void faceCamera ()  //Faces the player cube to the camera direction along x and z axis
@@ -54,7 +55,9 @@ public class PlayerMovement : MonoBehaviour
         floorVelocity.z *= floorNormal.z;
         if (floorVelocity.x + floorVelocity.z > maxSpeed)
         {
-            rb.linearVelocity = floorNormal * maxSpeed;
+            floorNormal *= maxSpeed;
+            floorNormal.y = rb.linearVelocity.y;
+            rb.linearVelocity = floorNormal;
         }
     }
 }

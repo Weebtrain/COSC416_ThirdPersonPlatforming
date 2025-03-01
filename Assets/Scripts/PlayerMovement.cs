@@ -9,12 +9,24 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpStrength = 1;
     [SerializeField] private float maxSpeed = 2;
     [SerializeField] private Transform camera;
+    [SerializeField] private float jumpCheckDistance = 0.1f;
 
+    private int jumpCounter = 0; //Counter is set to 0 when touching ground. Need extra jumps to jump more than touching the ground.
+    [SerializeField] private int jumps = 2;
+    private bool preJump = false;
+    private float preJumpTime;
+    [SerializeField] private float preJumpTimeLimit = 0.1f;
+
+    private static int groundLayer = 6;
+    private static int groundMask = 1 << groundLayer;
+
+    private BoxCollider bCollider;
     private Rigidbody rb;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        bCollider = GetComponent<BoxCollider> ();
         rb = GetComponent<Rigidbody>();
 
         inputManager.OnDirection.AddListener(MovePlayer);
@@ -28,6 +40,21 @@ public class PlayerMovement : MonoBehaviour
         maxVelocity();
     }
 
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.collider.CompareTag("Ground")) {
+            if (preJump && Time.time - preJumpTime < preJumpTimeLimit)
+            {
+                preJump = false;
+                jumpCounter = 1;
+                JumpActivate();
+            } else
+            {
+                jumpCounter = 0;
+            }
+        }
+    }
+
     public void MovePlayer (Vector3 direction)  // moves player relative to angle they are facing
     {
         rb.AddRelativeForce(direction * speed);
@@ -35,6 +62,32 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump ()
     {
+        Vector3 boxCast = new Vector3(bCollider.size.x * transform.localScale.x, jumpCheckDistance, bCollider.size.z * transform.localScale.z);
+        if (Physics.BoxCast(transform.position, boxCast, Vector3.down, transform.rotation, 1f, groundMask))
+        {
+            if (jumpCounter > 0)
+            {
+                preJump = true;
+                preJumpTime = Time.time;
+            } else
+            {
+                JumpActivate();
+            }
+        } else if (jumpCounter < jumps)
+        {
+            JumpActivate();
+            if (jumpCounter == 0) //discounts first jump since not touching ground, counts as double jump but set up to allow for more jumps
+            {
+                jumpCounter = 2;
+            } else
+            {
+                jumpCounter++;
+            }
+        }
+    }
+    private void JumpActivate ()
+    {
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         rb.AddForce(Vector3.up * jumpStrength);
     }
 

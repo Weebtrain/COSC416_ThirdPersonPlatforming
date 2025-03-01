@@ -273,9 +273,10 @@ MonoBehaviour:
   jumpStrength: 710
   maxSpeed: 6
   camera: {fileID: 330585546}
-  jumpCheckDistance: 0.1
+  jumpCheckDistance: 2
   jumps: 2
-  preJumpTimeLimit: 0.1
+  preJumpTimeLimit: 0.2
+  resetTime: 0.1
 --- !u!1 &296993453
 GameObject:
   m_ObjectHideFlags: 0

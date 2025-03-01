@@ -17,6 +17,9 @@ public class PlayerMovement : MonoBehaviour
     private float preJumpTime;
     [SerializeField] private float preJumpTimeLimit = 0.1f;
 
+    private float resetTimer = 0;
+    [SerializeField] private float resetTime = 0.1f;
+
     private static int groundLayer = 6;
     private static int groundMask = 1 << groundLayer;
 
@@ -45,11 +48,13 @@ public class PlayerMovement : MonoBehaviour
         if (collision.collider.CompareTag("Ground")) {
             if (preJump && Time.time - preJumpTime < preJumpTimeLimit)
             {
+                Debug.Log("Pre");
                 preJump = false;
                 jumpCounter = 1;
                 JumpActivate();
-            } else
+            } else if (Time.time - resetTimer > resetTime)
             {
+                Debug.Log("Reset");
                 jumpCounter = 0;
             }
         }
@@ -62,8 +67,8 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump ()
     {
-        Vector3 boxCast = new Vector3(bCollider.size.x * transform.localScale.x, jumpCheckDistance, bCollider.size.z * transform.localScale.z);
-        if (Physics.BoxCast(transform.position, boxCast, Vector3.down, transform.rotation, 1f, groundMask))
+        Vector3 boxCast = new Vector3(bCollider.size.x * transform.localScale.x, 0, bCollider.size.z * transform.localScale.z);
+        if (Physics.BoxCast(transform.position, boxCast, Vector3.down, Quaternion.identity, jumpCheckDistance, groundMask))
         {
             if (jumpCounter > 0)
             {
@@ -71,6 +76,8 @@ public class PlayerMovement : MonoBehaviour
                 preJumpTime = Time.time;
             } else
             {
+                Debug.Log("Jump");
+                jumpCounter = 1;
                 JumpActivate();
             }
         } else if (jumpCounter < jumps)
@@ -87,6 +94,7 @@ public class PlayerMovement : MonoBehaviour
     }
     private void JumpActivate ()
     {
+        resetTimer = Time.time;
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         rb.AddForce(Vector3.up * jumpStrength);
     }

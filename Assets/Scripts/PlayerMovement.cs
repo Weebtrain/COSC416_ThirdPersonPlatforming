@@ -47,9 +47,7 @@ public class PlayerMovement : MonoBehaviour
     }
     private void maxVelocity () //Forces velocity along x and z axis to combine to less than maxSpeed. Normal vector maintains this condition over combined x and z movement.
     {
-        Vector3 floorVelocity = Vector3.zero;
-        floorVelocity.x += rb.linearVelocity.x;
-        floorVelocity.z += rb.linearVelocity.z;
+        Vector3 floorVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         Vector3 floorNormal = Vector3.Normalize(floorVelocity);
         floorVelocity.x *= floorNormal.x;
         floorVelocity.z *= floorNormal.z;

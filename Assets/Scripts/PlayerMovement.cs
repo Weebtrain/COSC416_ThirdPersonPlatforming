@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Cinemachine;
+using System.Collections;
 
 [RequireComponent (typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
@@ -23,6 +24,12 @@ public class PlayerMovement : MonoBehaviour
     private static int groundLayer = 6;
     private static int groundMask = 1 << groundLayer;
 
+    [SerializeField] private float dashSpeed = 1;
+    [SerializeField] private float dashTime = 1;
+    private bool isDashing = false;
+    private bool hasDashed = false;
+    private float dampingReturn;
+
     private BoxCollider bCollider;
     private Rigidbody rb;
 
@@ -32,15 +39,21 @@ public class PlayerMovement : MonoBehaviour
         bCollider = GetComponent<BoxCollider> ();
         rb = GetComponent<Rigidbody>();
 
+        dampingReturn = rb.linearDamping;
+
         inputManager.OnDirection.AddListener(MovePlayer);
         inputManager.OnSpacePressed.AddListener(Jump);
+        inputManager.OnShiftPressed.AddListener(Dash);
     }
 
     // Update is called once per frame
     void Update()
     {
-        faceCamera();
-        maxVelocity();
+        if (!isDashing)
+        {
+            faceCamera();
+            maxVelocity();
+        }
     }
 
     private void OnCollisionStay(Collision collision)
@@ -52,10 +65,12 @@ public class PlayerMovement : MonoBehaviour
                 preJump = false;
                 jumpCounter = 1;
                 JumpActivate();
+                hasDashed = false;
             } else if (Time.time - resetTimer > resetTime)
             {
                 Debug.Log("Reset");
                 jumpCounter = 0;
+                hasDashed = false;
             }
         }
     }
@@ -67,28 +82,34 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump ()
     {
-        Vector3 boxCast = new Vector3(bCollider.size.x * transform.localScale.x, 0, bCollider.size.z * transform.localScale.z);
-        if (Physics.BoxCast(transform.position, boxCast, Vector3.down, Quaternion.identity, jumpCheckDistance, groundMask))
+        if (!isDashing)
         {
-            if (jumpCounter > 0)
+            Vector3 boxCast = new Vector3(bCollider.size.x * transform.localScale.x, 0, bCollider.size.z * transform.localScale.z);
+            if (Physics.BoxCast(transform.position, boxCast, Vector3.down, Quaternion.identity, jumpCheckDistance, groundMask))
             {
-                preJump = true;
-                preJumpTime = Time.time;
-            } else
-            {
-                Debug.Log("Jump");
-                jumpCounter = 1;
-                JumpActivate();
+                if (jumpCounter > 0)
+                {
+                    preJump = true;
+                    preJumpTime = Time.time;
+                }
+                else
+                {
+                    Debug.Log("Jump");
+                    jumpCounter = 1;
+                    JumpActivate();
+                }
             }
-        } else if (jumpCounter < jumps)
-        {
-            JumpActivate();
-            if (jumpCounter == 0) //discounts first jump since not touching ground, counts as double jump but set up to allow for more jumps
+            else if (jumpCounter < jumps)
             {
-                jumpCounter = 2;
-            } else
-            {
-                jumpCounter++;
+                JumpActivate();
+                if (jumpCounter == 0) //discounts first jump since not touching ground, counts as double jump but set up to allow for more jumps
+                {
+                    jumpCounter = 2;
+                }
+                else
+                {
+                    jumpCounter++;
+                }
             }
         }
     }
@@ -118,5 +139,26 @@ public class PlayerMovement : MonoBehaviour
             floorNormal.y = rb.linearVelocity.y;
             rb.linearVelocity = floorNormal;
         }
+    }
+
+    public void Dash ()
+    {
+        if (!isDashing && !hasDashed)
+        {
+            isDashing = true;
+            hasDashed = true;
+            StartCoroutine(HandleDashAction());
+        }
+    }
+
+    IEnumerator HandleDashAction()
+    {
+        rb.useGravity = false;
+        rb.linearDamping = 0;
+        rb.AddRelativeForce(Vector3.forward * dashSpeed);
+        yield return new WaitForSeconds(dashTime);
+        rb.linearDamping = dampingReturn;
+        rb.useGravity = true;
+        isDashing = false;
     }
 }

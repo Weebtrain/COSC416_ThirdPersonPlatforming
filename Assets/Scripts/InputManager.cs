@@ -5,6 +5,7 @@ public class InputManager : MonoBehaviour
 {
     public UnityEvent<Vector3> OnDirection = new UnityEvent<Vector3>();
     public UnityEvent OnSpacePressed = new UnityEvent();
+    public UnityEvent OnShiftPressed = new UnityEvent();
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -18,6 +19,10 @@ public class InputManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             OnSpacePressed?.Invoke();
+        }
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            OnShiftPressed?.Invoke();
         }
 
         Vector3 direction = Vector3.zero;

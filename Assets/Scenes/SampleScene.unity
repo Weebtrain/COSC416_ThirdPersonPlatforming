@@ -277,6 +277,8 @@ MonoBehaviour:
   jumps: 2
   preJumpTimeLimit: 0.2
   resetTime: 0.1
+  dashSpeed: 1000
+  dashTime: 0.2
 --- !u!1 &296993453
 GameObject:
   m_ObjectHideFlags: 0
@@ -1161,6 +1163,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   OnSpacePressed:
+    m_PersistentCalls:
+      m_Calls: []
+  OnShiftPressed:
     m_PersistentCalls:
       m_Calls: []
 --- !u!114 &896261293
